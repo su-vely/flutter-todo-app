@@ -19,8 +19,9 @@ class HomePage extends StatelessWidget {
       ),
       body: ListView.separated(
         padding: EdgeInsets.all(20),
-        itemCount: titles.length,
+        itemCount: titles.length, // 전체 아이템 개수 / 타이틀 개수만큼 반복
         separatorBuilder: (context, index) {
+          // index는 있는만큼 증가
           return SizedBox(height: 20);
         },
         itemBuilder: (context, index) {
@@ -32,7 +33,12 @@ class HomePage extends StatelessWidget {
           print('버튼');
           showModalBottomSheet(
             context: context,
+            // 화면 전체 사용할 수 있게 해주는 속성
+            isScrollControlled: true,
             builder: (context) {
+              final keyboardHeight = MediaQuery.of(context).viewInsets.bottom;
+              print('키보드의 높이는 : $keyboardHeight');
+
               return Container(
                 width: double.infinity,
                 height: 300,
@@ -46,6 +52,7 @@ class HomePage extends StatelessWidget {
                   top: 20,
                   bottom: 24,
                 ),
+                margin: EdgeInsets.only(bottom: keyboardHeight),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -57,7 +64,6 @@ class HomePage extends StatelessWidget {
                       ),
                     ),
                     SizedBox(height: 11),
-                    // todo 키보드가 바텀시트 가리는 현상 해결하기
                     // todo 키보드 올라와있을 때 흰색 컨테이너 터치하면 키보드 없애는 거 구현
                     // todo 저장 버튼 꾸미기
                     TextField(
