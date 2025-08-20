@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_todo_app/todo.dart';
 import 'package:flutter_todo_app/todo_widget.dart';
 
 // CRUD
@@ -11,7 +12,7 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   // 필요한것 : 투두내용(title), 완료여부(isDone)
-  List<Map<String, dynamic>> todoList = [];
+  List<Todo> todoList = [];
 
   // @override => 어노테이션
   void buttonClick() {}
@@ -33,10 +34,15 @@ class _HomePageState extends State<HomePage> {
           return SizedBox(height: 20);
         },
         itemBuilder: (context, index) {
-          Map<String, dynamic> todoItem = todoList[index];
-          return TodoWidget(
-            title: todoItem['title'],
-            isDone: todoItem['isDone'],
+          Todo todoItem = todoList[index];
+          return GestureDetector(
+            onTap: () {
+              print('투두 위젯 터치');
+              // todoItem 변수에 담긴 InDone 바꿔주기!
+              todoItem.isDone = !todoItem.isDone;
+              setState(() {});
+            },
+            child: TodoWidget(title: todoItem.title, isDone: todoItem.isDone),
           );
         },
       ),
@@ -132,7 +138,11 @@ class _HomePageState extends State<HomePage> {
                               'title': controller.text,
                               'isDone': false,
                             };
-                            todoList.add(newDate);
+                            Todo newTodo = Todo(
+                              title: controller.text,
+                              isDone: false,
+                            );
+                            todoList.add(newTodo);
                             setState(() {});
                             // 네비게이터가 관리하는 페이지들 담아놓는 컵(스텍)에서
                             // 가장 위에 쌓인 페이지 꺼내기 => pop
