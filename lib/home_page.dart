@@ -44,6 +44,9 @@ class _HomePageState extends State<HomePage> {
             },
             onLongPress: () {
               print('길게 터치됨');
+              // todoList 변수에 담긴 Todo를 삭제
+              todoList.removeAt(index);
+              setState(() {});
             },
             child: TodoWidget(title: todoItem.title, isDone: todoItem.isDone),
           );
