@@ -42,6 +42,9 @@ class _HomePageState extends State<HomePage> {
               todoItem.isDone = !todoItem.isDone;
               setState(() {});
             },
+            onLongPress: () {
+              print('길게 터치됨');
+            },
             child: TodoWidget(title: todoItem.title, isDone: todoItem.isDone),
           );
         },
