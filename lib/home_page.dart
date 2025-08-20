@@ -1,15 +1,23 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_todo_app/todo_widget.dart';
 
-class HomePage extends StatelessWidget {
+// CRUD
+// Creat : 투두 작성, Read : 저장된 투두리스트 불러오기, Update : 수정, Delete : 삭제
+
+class HomePage extends StatefulWidget {
+  @override
+  State<HomePage> createState() => _HomePageState();
+}
+
+class _HomePageState extends State<HomePage> {
+  // 필요한것 : 투두내용(title), 완료여부(isDone)
+  List<Map<String, dynamic>> todoList = [];
+
   // @override => 어노테이션
-  // 코드의 메타데이터!
-  // 없어도 에러는 나지 않음
-  // 협업할 때, 다른개발자한테 알려주기위해서!
-  // 빌드할때 (apk파일 만들 때)
+  void buttonClick() {}
+
   @override
   Widget build(BuildContext context) {
-    List<String> titles = ["물마시기", "프로그래밍", "아침에코딩", "Q&A", "스터디"];
     return Scaffold(
       appBar: AppBar(
         title: Text("투두앱"),
@@ -19,13 +27,17 @@ class HomePage extends StatelessWidget {
       ),
       body: ListView.separated(
         padding: EdgeInsets.all(20),
-        itemCount: titles.length, // 전체 아이템 개수 / 타이틀 개수만큼 반복
+        itemCount: todoList.length, // 전체 아이템 개수 / 타이틀 개수만큼 반복
         separatorBuilder: (context, index) {
           // index는 있는만큼 증가
           return SizedBox(height: 20);
         },
         itemBuilder: (context, index) {
-          return TodoWidget(title: titles[index], isDone: index % 2 == 0);
+          Map<String, dynamic> todoItem = todoList[index];
+          return TodoWidget(
+            title: todoItem['title'],
+            isDone: todoItem['isDone'],
+          );
         },
       ),
       floatingActionButton: FloatingActionButton(
@@ -38,6 +50,9 @@ class HomePage extends StatelessWidget {
             builder: (context) {
               final keyboardHeight = MediaQuery.of(context).viewInsets.bottom;
               print('키보드의 높이는 : $keyboardHeight');
+
+              // FIXME dispose 호출 해줘야됨
+              TextEditingController controller = TextEditingController();
 
               return GestureDetector(
                 onTap: () {
@@ -73,6 +88,7 @@ class HomePage extends StatelessWidget {
                       ),
                       SizedBox(height: 11),
                       TextField(
+                        controller: controller,
                         decoration: InputDecoration(
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12),
@@ -110,7 +126,19 @@ class HomePage extends StatelessWidget {
                               fontWeight: FontWeight.bold,
                             ),
                           ),
-                          onPressed: () {},
+                          onPressed: () {
+                            // 여기서 todoList에 Map 추가
+                            Map<String, dynamic> newDate = {
+                              'title': controller.text,
+                              'isDone': false,
+                            };
+                            todoList.add(newDate);
+                            setState(() {});
+                            // 네비게이터가 관리하는 페이지들 담아놓는 컵(스텍)에서
+                            // 가장 위에 쌓인 페이지 꺼내기 => pop
+                            print('저장된 투두 리스트 개수 : ${todoList.length}');
+                            Navigator.pop(context);
+                          },
                           child: Text('저장'),
                         ),
                       ),
