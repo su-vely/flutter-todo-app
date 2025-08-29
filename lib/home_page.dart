@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_todo_app/todo.dart';
 import 'package:flutter_todo_app/todo_widget.dart';
@@ -92,19 +93,52 @@ class _HomePageState extends State<HomePage> {
             },
             onLongPress: () async {
               print('길게 터치됨');
-              // 1. Firestore 인스턴스 가지고오기
-              final firestore = FirebaseFirestore.instance;
 
-              // 2. 컬렉션 참조 만들기
-              final colRef = firestore.collection('todos');
+              final result = await showCupertinoDialog(
+                context: context,
+                builder: (context) {
+                  return CupertinoAlertDialog(
+                    title: Text('삭제 하시겠습니까?'),
+                    actions: [
+                      CupertinoDialogAction(
+                        onPressed: () {
+                          Navigator.pop(context, true);
+                        },
+                        child: Text('삭제', style: TextStyle(color: Colors.red)),
+                      ),
+                      CupertinoDialogAction(
+                        onPressed: () {
+                          Navigator.pop(context, false);
+                        },
+                        child: Text('취소', style: TextStyle(color: Colors.blue)),
+                      ),
+                    ],
+                  );
+                  return Center(
+                    child: Container(
+                      width: 300,
+                      height: 300,
+                      color: Colors.amber,
+                    ),
+                  );
+                },
+              );
+              print('팝업 닫힘');
+              if (result == true) {
+                // 1. Firestore 인스턴스 가지고오기
+                final firestore = FirebaseFirestore.instance;
 
-              // 3. 문서 참조 만들기
-              final docRef = colRef.doc(todoItem.id);
+                // 2. 컬렉션 참조 만들기
+                final colRef = firestore.collection('todos');
 
-              // 4. 삭제
-              await docRef.delete();
-              // 데이터 새로고침
-              loadTodoList();
+                // 3. 문서 참조 만들기
+                final docRef = colRef.doc(todoItem.id);
+
+                // 4. 삭제
+                await docRef.delete();
+                // 데이터 새로고침
+                loadTodoList();
+              }
             },
             child: TodoWidget(title: todoItem.title, isDone: todoItem.isDone),
           );
