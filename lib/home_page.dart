@@ -90,11 +90,21 @@ class _HomePageState extends State<HomePage> {
               // 데이터 새로고침
               loadTodoList();
             },
-            onLongPress: () {
+            onLongPress: () async {
               print('길게 터치됨');
-              // todoList 변수에 담긴 Todo를 삭제
-              todoList.removeAt(index);
-              setState(() {});
+              // 1. Firestore 인스턴스 가지고오기
+              final firestore = FirebaseFirestore.instance;
+
+              // 2. 컬렉션 참조 만들기
+              final colRef = firestore.collection('todos');
+
+              // 3. 문서 참조 만들기
+              final docRef = colRef.doc(todoItem.id);
+
+              // 4. 삭제
+              await docRef.delete();
+              // 데이터 새로고침
+              loadTodoList();
             },
             child: TodoWidget(title: todoItem.title, isDone: todoItem.isDone),
           );
