@@ -35,7 +35,11 @@ class _HomePageState extends State<HomePage> {
       // QueryDocumentSnapshot 이라는 객체 내에서 data() 함수 호출해주면
       // 우리가 원하는 진짜 데이터 반환해줌
       final realData = document.data();
-      Todo todo = Todo(title: realData['title'], isDone: realData['isDone']);
+      Todo todo = Todo(
+        id: document.id,
+        title: realData['title'],
+        isDone: realData['isDone'],
+      );
       newTodoList.add(todo);
     }
 
@@ -70,11 +74,21 @@ class _HomePageState extends State<HomePage> {
         itemBuilder: (context, index) {
           Todo todoItem = todoList[index];
           return GestureDetector(
-            onTap: () {
+            onTap: () async {
               print('투두 위젯 터치');
-              // todoItem 변수에 담긴 InDone 바꿔주기!
-              todoItem.isDone = !todoItem.isDone;
-              setState(() {});
+              // 1. 파이어베이스 콘솔에서 파이어스토어 클릭하기 => Firestore 인스턴스 가지고오기
+              final firestore = FirebaseFirestore.instance;
+
+              // 2. 어떤 클렉션 안의 문서 수정할지 선택하기 위해서 컬렉션 클릭하기 => 컬렉션 참조 만들기
+              final colRef = firestore.collection('todos');
+
+              // 3. 수정할 문서 클릭 => 문서 참조 만들기
+              final docRef = colRef.doc(todoItem.id);
+
+              // 4. 수정 => 문서 참조 객체 이용해서 update 함수 호출
+              await docRef.update({'isDone': !todoItem.isDone});
+              // 데이터 새로고침
+              loadTodoList();
             },
             onLongPress: () {
               print('길게 터치됨');

@@ -7,7 +7,8 @@
 // 클래스 객체 내 속성 참조하거나 생성자에 값 넣어줄 때
 // 속성명이 오타가 나면 vscode에서 에러가 나서 실행조차 안됨 => 컴파일 에러
 class Todo {
+  String id;
   String title;
   bool isDone;
-  Todo({required this.title, required this.isDone});
+  Todo({required this.title, required this.isDone, required this.id});
 }
