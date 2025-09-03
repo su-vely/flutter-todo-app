@@ -1,63 +1,22 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_todo_app/home_page_view_model.dart';
 import 'package:flutter_todo_app/todo.dart';
 import 'package:flutter_todo_app/todo_widget.dart';
 
 // CRUD
 // Creat : 투두 작성, Read : 저장된 투두리스트 불러오기, Update : 수정, Delete : 삭제
 
-class HomePage extends StatefulWidget {
+class HomePage extends ConsumerWidget {
   @override
-  State<HomePage> createState() => _HomePageState();
-}
-
-class _HomePageState extends State<HomePage> {
-  // 필요한것 : 투두내용(title), 완료여부(isDone)
-  List<Todo> todoList = [];
-
-  // @override => 어노테이션
-  void buttonClick() {}
-
-  // todos 컬렉션의 모든 투두 데이터 가지고 오는 함수
-  void loadTodoList() async {
-    // 1. Firestore 인스턴스 (객체)
-    final firestore = FirebaseFirestore.instance;
-    // 2. 1번에서 만든 객체로 컬렉션 참조 만들어주기
-    final colRef = firestore.collection('todos');
-    // 3. 2번에서 만든 컬렉션 참조로 모든 데이터 불러오기
-    final result = await colRef.get();
-    final documentList = result.docs;
-
-    List<Todo> newTodoList = [];
-    for (var i = 0; i < documentList.length; i++) {
-      final document = documentList[i];
-      print(document.id);
-      // QueryDocumentSnapshot 이라는 객체 내에서 data() 함수 호출해주면
-      // 우리가 원하는 진짜 데이터 반환해줌
-      final realData = document.data();
-      Todo todo = Todo(
-        id: document.id,
-        title: realData['title'],
-        isDone: realData['isDone'],
-      );
-      newTodoList.add(todo);
-    }
-
-    setState(() {
-      todoList = newTodoList;
-    });
-  }
-
-  // StateFulWidget이 화면에 보일 때 딱 한번만 호출되는 함수
-  @override
-  void initState() {
-    super.initState();
-    loadTodoList();
-  }
-
-  @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    // WidgetRef ref => 리버팟 뷰모델 관리자한테 접근할 수 있게 해주는 객체
+    // 1. 상태 가지고 오기
+    final homeState = ref.watch(HomeViewModelProvider);
+    // 2. 뷰모델 객체 가지고오기
+    final homeViewModel = ref.read(HomeViewModelProvider.notifier);
     return Scaffold(
       appBar: AppBar(
         title: Text("투두앱"),
@@ -67,29 +26,17 @@ class _HomePageState extends State<HomePage> {
       ),
       body: ListView.separated(
         padding: EdgeInsets.all(20),
-        itemCount: todoList.length, // 전체 아이템 개수 / 타이틀 개수만큼 반복
+        itemCount: homeState.todoList.length, // 전체 아이템 개수 / 타이틀 개수만큼 반복
         separatorBuilder: (context, index) {
           // index는 있는만큼 증가
           return SizedBox(height: 20);
         },
         itemBuilder: (context, index) {
-          Todo todoItem = todoList[index];
+          Todo todoItem = homeState.todoList[index];
           return GestureDetector(
             onTap: () async {
               print('투두 위젯 터치');
-              // 1. 파이어베이스 콘솔에서 파이어스토어 클릭하기 => Firestore 인스턴스 가지고오기
-              final firestore = FirebaseFirestore.instance;
-
-              // 2. 어떤 클렉션 안의 문서 수정할지 선택하기 위해서 컬렉션 클릭하기 => 컬렉션 참조 만들기
-              final colRef = firestore.collection('todos');
-
-              // 3. 수정할 문서 클릭 => 문서 참조 만들기
-              final docRef = colRef.doc(todoItem.id);
-
-              // 4. 수정 => 문서 참조 객체 이용해서 update 함수 호출
-              await docRef.update({'isDone': !todoItem.isDone});
-              // 데이터 새로고침
-              loadTodoList();
+              homeViewModel.updateTodo(todoItem.id, !todoItem.isDone);
             },
             onLongPress: () async {
               print('길게 터치됨');
@@ -127,19 +74,7 @@ class _HomePageState extends State<HomePage> {
               );
               print('팝업 닫힘');
               if (result == true) {
-                // 1. Firestore 인스턴스 가지고오기
-                final firestore = FirebaseFirestore.instance;
-
-                // 2. 컬렉션 참조 만들기
-                final colRef = firestore.collection('todos');
-
-                // 3. 문서 참조 만들기
-                final docRef = colRef.doc(todoItem.id);
-
-                // 4. 삭제
-                await docRef.delete();
-                // 데이터 새로고침
-                loadTodoList();
+                homeViewModel.deleteTodo(todoItem.id);
               }
             },
             child: TodoWidget(title: todoItem.title, isDone: todoItem.isDone),
@@ -233,22 +168,7 @@ class _HomePageState extends State<HomePage> {
                             ),
                           ),
                           onPressed: () async {
-                            // 1. Firestore 인스턴스 가져오기
-                            final firestore = FirebaseFirestore.instance;
-                            // 2. 어떤 컬렉션에 저장할지 설정하는 컬렉션 참조 만들기
-                            final colRef = firestore.collection('todos');
-                            // 3. 어떤 문서를 저장할지 설정하는 문서 참조
-                            final docRef = colRef.doc();
-                            await docRef.set({
-                              'title': controller.text,
-                              'isDone': false,
-                            });
-
-                            loadTodoList();
-
-                            // 네비게이터가 관리하는 페이지들 담아놓는 컵(스텍)에서
-                            // 가장 위에 쌓인 페이지 꺼내기 => pop
-                            print('저장된 투두 리스트 개수 : ${todoList.length}');
+                            homeViewModel.createTodo(controller.text);
                             Navigator.pop(context);
                           },
                           child: Text('저장'),
